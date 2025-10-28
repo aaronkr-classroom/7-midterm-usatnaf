@@ -1,157 +1,183 @@
-ï»¿// hansan.c (í•œì‚° ì „ìŸ)
+// hansan.c (ÇÑ»ê ÀüÀï)
 #include <stdio.h>
 
-#define CMD_RELOAD		0x01 // Bit 0 - ì¥ì „ ì¤€ë¹„	0000 0001
-#define CMD_FIRE		0x02 // Bit 1 - ë°œí¬ ëª…ë ¹	0000 0010
-#define CMD_CHARGE		0x04 // Bit 2 - ëŒê²© ì „ì§„	0000 0100
-#define CMD_HOLD		0x08 // Bit 3 - í›„í‡´ ì¤€ë¹„	0000 1000
-#define CMD_CRANE_FORM	0x10 // Bit 4 - í•™ìµì§„ ìœ ì§€	0001 0000
-#define CMD_EVAC		0x20 // Bit 5 - ë¶€ìƒë³‘ í›„ì†¡	0010 0000
-#define CMD_DAMAGE		0x40 // Bit 6 - í”¼í•´ ê²½ê³ 	0100 0000
+#define CMD_RELOAD		0x01 // Bit 0 - ÀåÀü ÁØºñ	0000 0001
+#define CMD_FIRE		0x02 // Bit 1 - ¹ßÆ÷ ¸í·É	0000 0010
+#define CMD_CHARGE		0x04 // Bit 2 - µ¹°İ ÀüÁø	0000 0100
+#define CMD_HOLD		0x08 // Bit 3 - ÈÄÅğ ÁØºñ	0000 1000
+#define CMD_CRANE_FORM	0x10 // Bit 4 - ÇĞÀÍÁø À¯Áö	0001 0000
+#define CMD_EVAC		0x20 // Bit 5 - ºÎ»óº´ ÈÄ¼Û	0010 0000
+#define CMD_DAMAGE		0x40 // Bit 6 - ÇÇÇØ °æ°í	0100 0000
 
-// Toggle ëª…ë ¹ ON
+// Toggle ¸í·É ON
 unsigned char CommandOn(unsigned char fleet, unsigned char bit) {
 	if (bit < 7)
 		fleet |= (0x01 << bit);
 	return fleet;
 }
 
-// Toggle ëª…ë ¹ OFF
+// Toggle ¸í·É OFF
 unsigned char CommandOff(unsigned char fleet, unsigned char bit) {
 	if (bit < 7)
 		fleet &= ~(0x01 << bit);
 	return fleet;
 }
 
-// ìƒíƒœ í‘œì‹œ
+// »óÅÂ Ç¥½Ã
 void showStatus(unsigned char fleet) {
-	printf("\n[í˜„ì¬ í•¨ì„  ìƒíƒœ] HEX: %02X | BIN: ", fleet);
+	printf("\n[ÇöÀç ÇÔ¼± »óÅÂ] HEX: %02X | BIN: ", fleet);
 	for (int i = 7; i >= 0; i--) {
 		printf("%d", (fleet >> i) & 1);
 	}
 	printf("\n");
 
-	if (fleet & CMD_RELOAD)		printf("ì¥ì „ ì¤€ë¹„ ì™„ë£Œ\n");
-	if (fleet & CMD_FIRE)		printf("ë°œí¬ ëª…ë ¹ í™œì„±\n");
-	if (fleet & CMD_CHARGE)		printf("ëŒê²© ì „ì§„ ê°œì‹œ\n");
-	if (fleet & CMD_HOLD)		printf("í›„í‡´ ì¤€ë¹„ ì¤‘\n");
-	if (fleet & CMD_CRANE_FORM)	printf("í•™ìµì§„ ì§„í˜• ìœ ì§€\n");
-	if (fleet & CMD_EVAC)		printf("ë¶€ìƒë³‘ í›„ì†¡\n");
-	if (fleet & CMD_DAMAGE)		printf("í•¨ì„  í”¼í•´ ë°œìƒ!\n");
-	if (fleet == 0)				printf("ëª¨ë“  í•¨ì„  ëŒ€ê¸° ìƒíƒœ\n");
+	if (fleet & CMD_RELOAD)		printf("ÀåÀü ÁØºñ ¿Ï·á\n");
+	if (fleet & CMD_FIRE)		printf("¹ßÆ÷ ¸í·É È°¼º\n");
+	if (fleet & CMD_CHARGE)		printf("µ¹°İ ÀüÁø °³½Ã\n");
+	if (fleet & CMD_HOLD)		printf("ÈÄÅğ ÁØºñ Áß\n");
+	if (fleet & CMD_CRANE_FORM)	printf("ÇĞÀÍÁø ÁøÇü À¯Áö\n");
+	if (fleet & CMD_EVAC)		printf("ºÎ»óº´ ÈÄ¼Û\n");
+	if (fleet & CMD_DAMAGE)		printf("ÇÔ¼± ÇÇÇØ ¹ß»ı!\n");
+	if (fleet == 0)				printf("¸ğµç ÇÔ¼± ´ë±â »óÅÂ\n");
 }
 
 void printMenu(void) {
-	printf("\n=== ì´ìˆœì‹ ì˜ í•œì‚° ì „ìŸ! ===\n");
-	printf("1. Toggle ì¥ì§„ ì¤€ë¹„\n");
-	printf("2. Toggle ë°œí¬ ëª…ë ¹\n");
-	printf("3. Toggle ëŒê²© ì „ì§„\n");
-	printf("4. Toggle í›„í‡´ ì¤€ë¹„\n");
-	printf("5. Toggle í•™ìµì§„ ìœ ì§€\n");
-	printf("6. Toggle ë¶€ìƒë³‘ í›„ì†¡\n");
-	printf("7. Toggle í”¼í•´ ê²½ê³ \n");
-	printf("8. Reset ALL (ì´ˆê¸°í™”)\n");
-	printf("9. Inspection (ì´ë¬´ê³µ ì ê²€)\n");
-	printf("10. Full Attack Mode (ì „ë©´ ëŒê²©)\n");
+	printf("\n=== ÀÌ¼ø½ÅÀÇ ÇÑ»ê ÀüÀï! ===\n");
+	printf("1. Toggle ÀåÁø ÁØºñ\n");
+	printf("2. Toggle ¹ßÆ÷ ¸í·É\n");
+	printf("3. Toggle µ¹°İ ÀüÁø\n");
+	printf("4. Toggle ÈÄÅğ ÁØºñ\n");
+	printf("5. Toggle ÇĞÀÍÁø À¯Áö\n");
+	printf("6. Toggle ºÎ»óº´ ÈÄ¼Û\n");
+	printf("7. Toggle ÇÇÇØ °æ°í\n");
+	printf("8. Reset ALL (ÃÊ±âÈ­)\n");
+	printf("9. Inspection (ÃÑ¹«°ø Á¡°Ë)\n");
+	printf("10. Full Attack Mode (Àü¸é µ¹°İ)\n");
 	printf("11. Exit\n");
-	printf("ëª…ë ¹ ì„ íƒ (1~11): ");
+	printf("¸í·É ¼±ÅÃ (1~11): ");
 }
 
 int main(void) {
 	unsigned char fleet = 0;
 	int choice;
+	int hp = 100;
 
+	
 	while (1) {
-		printMenu(); // ë‚˜ì¤‘ì—
+		if (hp <= 0) {
+			printf("ÇÔ¼±ÀÇ Ã¼·ÂÀÌ °í°¥µÇ¾ú½À´Ï´Ù! °ÔÀÓÀ» Á¾·áÇÕ´Ï´Ù\n");
+			return 0;
+		}
+		printMenu(); // ³ªÁß¿¡
 		scanf_s("%d", &choice);
 
 		switch (choice) {
 		case 1:
 			if (fleet & CMD_RELOAD) {
 				fleet = CommandOff(fleet, 0);
-				printf("ì¥ì „ ì¤‘ì§€!\n");
+				printf("HP:%d\n", hp);
+				printf("ÀåÀü ÁßÁö!\n");
 			}
 			else {
 				fleet = CommandOn(fleet, 0);
-				printf("ì „ í•¨ì„ , í‘œë¥¼ ì¥ì „í•˜ë¼!\n");
+				printf("HP:%d\n", hp);
+				printf("Àü ÇÔ¼±, Ç¥¸¦ ÀåÀüÇÏ¶ó!\n");
 			}
 			break;
 		case 2:
 			if (fleet & CMD_FIRE) {
 				fleet = CommandOff(fleet, 1);
-				printf("ë°œí¬ ì¤‘ì§€! í¬ì‹  ë‚´ë¦°ë‹¤!\n");
+				printf("HP:%d\n", hp);
+				printf("¹ßÆ÷ ÁßÁö! Æ÷½Å ³»¸°´Ù!\n");
 			}
 			else {
 				fleet = CommandOn(fleet, 1);
-				printf("ë°œí¬ í•˜ë¼! ì ì„ í–¥í•´ ì´ë¼!\n");
+				printf("HP:%d\n", hp);
+				printf("¹ßÆ÷ ÇÏ¶ó! ÀûÀ» ÇâÇØ ½÷¶ó!\n");
 			}
 			break;
 		case 3:
 			if (fleet & CMD_CHARGE) {
 				fleet = CommandOff(fleet, 2);
-				printf("ëŒê²© ì¤‘ì§€!\n");
+				printf("HP:%d\n", hp);
+				printf("µ¹°İ ÁßÁö!\n");
 			}
 			else {
 				fleet = CommandOn(fleet, 2);
-				printf("ì „ í•¨ì„  ëŒê²© ì „ì§„ ê°œì‹œ!\n");
+				printf("HP:%d\n", hp);
+				printf("Àü ÇÔ¼± µ¹°İ ÀüÁø °³½Ã!\n");
 			}
 			break;
 		case 4:
 			if (fleet & CMD_HOLD) {
 				fleet = CommandOff(fleet, 3);
-				printf("í›„í‡´ ëª…ë ¹ í•´ì œ!\n");
+				printf("HP:%d\n", hp);
+				printf("ÈÄÅğ ¸í·É ÇØÁ¦!\n");
 			}
 			else {
 				fleet = CommandOn(fleet, 3);
-				printf("í›„í‡´ ì¤€ë¹„, ì  ì›€ì§ì„ ê°ì‹œ!\n");
+				printf("HP:%d\n", hp);
+				printf("ÈÄÅğ ÁØºñ, Àû ¿òÁ÷ÀÓ °¨½Ã!\n");
 			}
 			break;
 		case 5:
 			if (fleet & CMD_CRANE_FORM) {
 				fleet = CommandOff(fleet, 4);
-				printf("í•™ìµì§„ ì§„í˜• í•´ì œ!\n");
+				printf("HP:%d\n", hp);
+				printf("ÇĞÀÍÁø ÁøÇü ÇØÁ¦!\n");
 			}
 			else {
 				fleet = CommandOn(fleet, 4);
-				printf("í•™ìµì§„ ì§„í˜• ìœ ì§€!\n");
+				printf("HP:%d\n", hp);
+				printf("ÇĞÀÍÁø ÁøÇü À¯Áö!\n");
 			}
 			break;
 		case 6:
 			if (fleet & CMD_EVAC) {
 				fleet = CommandOff(fleet, 5);
-				printf("ë¶€ìƒë³‘ í›„ì†¡ ì¤‘ì§€!\n");
+				printf("HP:%d\n", hp);
+				printf("ºÎ»óº´ ÈÄ¼Û ÁßÁö!\n");
 			}
 			else {
 				fleet = CommandOn(fleet, 5);
-				printf("ë¶€ìƒë³‘ í›„ì†¡ ì‹œì‘!\n");
+				hp=hp+5;
+				printf("HP:%d\n", hp);
+				printf("ºÎ»óº´ ÈÄ¼Û ½ÃÀÛ!\n");
 			}
 			break;
 		case 7:
 			if (fleet & CMD_DAMAGE) {
 				fleet = CommandOff(fleet, 6);
-				printf("í”¼í•´ ê²½ê³  í•´ì œ!\n");
+				printf("HP:%d\n", hp);
+				printf("ÇÇÇØ °æ°í ÇØÁ¦!\n");
 			}
 			else {
 				fleet = CommandOn(fleet, 6);
-				printf("í•¨ì„  í”¼í•´ ë°œìƒ ê²½ê³ !\n");
+				hp = hp - 10;
+				printf("HP:%d\n", hp);
+				printf("ÇÔ¼± ÇÇÇØ ¹ß»ı °æ°í!\n");
 			}
 			break;
 		case 8:
 			fleet = 0;
-			printf("ëª¨ë“  í•¨ì„  ìƒíƒœ ì´ˆê¸°í™” ì™„ë£Œ!\n");
+			printf("¸ğµç ÇÔ¼± »óÅÂ ÃÊ±âÈ­ ¿Ï·á!\n");
+			printf("HP:%d\n", hp);
 			break;
 		case 9:
-			printf("ì´ë¬´ê³µ ì ê²€: í˜„ì¬ ëª¨ë“  í•¨ì„  ìƒíƒœ í™•ì¸!\n");
+			printf("ÃÑ¹«°ø Á¡°Ë: ÇöÀç ¸ğµç ÇÔ¼± »óÅÂ È®ÀÎ!\n");
+			printf("HP:%d\n", hp);
 			break;
 		case 10:
-			fleet = 0x7F; // ëª¨ë“  ë¹„íŠ¸ ON
-			printf("ì „ë©´ ëŒê²© ëª¨ë“œ! ëª¨ë“  ëª…ë ¹ í™œì„±!\n");
+			fleet = 0x7F; // ¸ğµç ºñÆ® ON
+			printf("Àü¸é µ¹°İ ¸ğµå! ¸ğµç ¸í·É È°¼º!\n");
+			printf("HP:%d\n", hp);
 			break;
 		case 11:
-			printf("í”„ë¡œë¥´ë¨ ì¢…ë£Œí–…ë‹ˆë‹¤.\n");
+			printf("ÇÁ·Î¸£·¥ Á¾·áÇİ´Ï´Ù.\n");
+			printf("HP:%d\n", hp);
 			return 0;
 		default:
-			printf("ì˜ëª»ë­ ì…ë ¥ì…ë‹ˆë‹¤! (1~11)ì„ íƒ!\n");
+			printf("Àß¸ø‰è ÀÔ·ÂÀÔ´Ï´Ù! (1~11)¼±ÅÃ!\n");
 		} // switch()
 
 		showStatus(fleet);
